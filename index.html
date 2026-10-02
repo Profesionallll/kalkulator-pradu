@@ -296,30 +296,7 @@
       <div class="card" style="padding: 16px; text-align: center;">
         <h4 style="font-size: 0.85rem; color: #64748b;">📊 Średnia Cena Giełdowa (RCE)</h4>
         <div style="font-size: 1.3rem; font-weight: bold; color: #0284c7; margin: 6px 0;" id="livePrice">0,48 zł / kWh</div>
-        <button onclick="async function updateLivePrice() {
-    const livePriceElement = document.getElementById('livePrice');
-    if (livePriceElement) {
-        livePriceElement.innerText = "Pobieranie...";
-    }
-    
-    try {
-        const response = await fetch('https://api.raporty.pse.pl/api/rce-pln?$first=1&$orderby=udt%20desc');
-        const data = await response.json();
-        
-        if (data && data.value && data.value.length > 0) {
-            // API zwraca PLN/MWh, dzielimy przez 1000 na PLN/kWh
-            const cenakWh = (data.value[0].rce / 1000).toFixed(2).replace('.', ',');
-            if (livePriceElement) {
-                livePriceElement.innerText = cenakWh + ' zł / kWh';
-            }
-        }
-    } catch (error) {
-        console.error('Błąd pobierania danych z PSE:', error);
-        if (livePriceElement) {
-            livePriceElement.innerText = '0,42 zł / kWh';
-        }
-    }
-}" style="font-size:0.75rem; background:#cbd5e1; color:#1e293b; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Odśwież stawki API</button>
+        <button onclick="updateLivePrice()" style="font-size:0.75rem; background:#cbd5e1; color:#1e293b; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Odśwież stawki API</button>
       </div>
 
       <!-- MIEJSCE NA GOOGLE ADSENSE -->
