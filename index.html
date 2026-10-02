@@ -394,6 +394,30 @@
 
     // Start
     calculateTariffs();
-  </script>
+  </script><script>
+async function updateLivePrice() {
+    const livePriceElement = document.getElementById('livePrice');
+    if (livePriceElement) {
+        livePriceElement.innerText = "Pobieranie...";
+    }
+    
+    try {
+        const response = await fetch('https://api.raporty.pse.pl/api/rce-pln?$first=1&$orderby=udt%20desc');
+        const data = await response.json();
+        
+        if (data && data.value && data.value.length > 0) {
+            const cenakWh = (data.value[0].rce / 1000).toFixed(2).replace('.', ',');
+            if (livePriceElement) {
+                livePriceElement.innerText = cenakWh + ' zł / kWh';
+            }
+        }
+    } catch (error) {
+        console.error('Błąd pobierania danych z PSE:', error);
+        if (livePriceElement) {
+            livePriceElement.innerText = '0,42 zł / kWh';
+        }
+    }
+}
+</script>
 </body>
 </html>
