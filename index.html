@@ -386,12 +386,36 @@
       document.getElementById("agdTotalCost").innerText = `ok. ${total} zł / miesiąc`;
     }
 
-    // Symulacja pobierania stawek API na żywo
-    function updateLivePrice() {
-      const randomPrice = (0.35 + Math.random() * 0.25).toFixed(2);
-      document.getElementById("livePrice").innerText = `${randomPrice.replace('.', ',')} zł / kWh`;
+  async function updateLivePrice() {
+    const livePriceElement = document.getElementById('livePrice');
+    if (livePriceElement) {
+        livePriceElement.innerText = "Pobieranie...";
     }
-
+    
+    // Serwer pośredniczący rozwiązujący problem blokady CORS
+    const proxyUrl = 'https://corsproxy.io/?';
+    const targetUrl = 'https://api.raporty.pse.pl/api/rce-pln?$first=1&$orderby=udt%20desc';
+    
+    try {
+        const response = await fetch(proxyUrl + encodeURIComponent(targetUrl));
+        const data = await response.json();
+        
+        if (data && data.value && data.value.length > 0) {
+            const cenakWh = (data.value[0].rce / 1000).toFixed(2).replace('.', ',');
+            if (livePriceElement) {
+                livePriceElement.innerText = cenakWh + ' zł / kWh';
+            }
+        } else {
+            throw new Error("Brak danych z API");
+        }
+    } catch (error) {
+        console.error('Błąd PSE API, wpisuję cenę średnią:', error);
+        // Cena bezpieczna/zastępcza w razie błędu połączenia
+        if (livePriceElement) {
+            livePriceElement.innerText = '0,48 zł / kWh';
+        }
+    }
+}
     // Start
     calculateTariffs();
   </script><script>
