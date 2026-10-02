@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EkoKalkulator - Prąd, Taryfy i Oszczędności w Domu</title>
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      line-height: 1.6;
+      padding-bottom: 50px;
+    }
+    
+    header {
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: white;
+      padding: 30px 20px 20px 20px;
+      text-align: center;
+      border-bottom: 4px solid #0284c7;
+    }
+    header h1 { font-size: 1.8rem; margin-bottom: 6px; color: #38bdf8; }
+    header p { font-size: 0.9rem; color: #94a3b8; max-width: 600px; margin: 0 auto; }
+
+    /* Nawigacja / Zakładki */
+    .nav-tabs {
+      display: flex;
+      justify-content: center;
+      background-color: #1e293b;
+      gap: 10px;
+      padding: 10px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      padding: 10px 18px;
+      font-size: 0.9rem;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover { color: white; background-color: #334155; }
+    .tab-btn.active { color: white; background-color: #0284c7; }
+
+    .container {
+      max-width: 1050px;
+      margin: 25px auto;
+      padding: 0 15px;
+      display: grid;
+      grid-template-columns: 1fr 310px;
+      gap: 24px;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: flex; flex-direction: column; gap: 20px; }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e2e8f0;
+    }
+    .card h2 { font-size: 1.2rem; margin-bottom: 16px; color: #0f172a; }
+
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 0.85rem; font-weight: 600; color: #475569; margin-bottom: 6px; }
+    input, select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+    }
+    input:focus, select:focus { border-color: #0284c7; }
+
+    button.btn-calc {
+      width: 100%;
+      background-color: #0284c7;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button.btn-calc:hover { background-color: #0369a1; }
+
+    /* Urządzenia Grid */
+    .devices-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .device-item {
+      border: 1px solid #cbd5e1;
+      padding: 12px;
+      border-radius: 8px;
+      background-color: #f8fafc;
+    }
+    .device-item h4 { font-size: 0.9rem; margin-bottom: 6px; }
+    .device-item input { margin-top: 4px; padding: 6px; }
+
+    /* Wyniki */
+    .results-box {
+      background-color: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+    .savings-highlight { font-size: 1.4rem; font-weight: bold; color: #15803d; }
+
+    /* FAQ / Baza wiedzy */
+    .faq-item { margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; }
+    .faq-item h3 { font-size: 1rem; color: #0284c7; cursor: pointer; margin-bottom: 4px; }
+    .faq-item p { font-size: 0.88rem; color: #475569; }
+
+    /* Pasek Boczny */
+    .sidebar { display: flex; flex-direction: column; gap: 20px; }
+    .ad-placeholder {
+      background-color: #f1f5f9;
+      border: 2px dashed #cbd5e1;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      color: #64748b;
+      font-size: 0.8rem;
+      min-height: 250px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    .affiliate-box {
+      background: linear-gradient(135deg, #eff6ff, #dbeafe);
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .affiliate-box h3 { font-size: 0.95rem; color: #1e40af; margin-bottom: 8px; }
+    .affiliate-box p { font-size: 0.83rem; color: #1e3a8a; margin-bottom: 12px; }
+    .affiliate-btn {
+      display: block;
+      text-align: center;
+      background-color: #2563eb;
+      color: white;
+      text-decoration: none;
+      padding: 10px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 768px) {
+      .container { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>⚡ EkoKalkulator Energii</h1>
+    <p>Przeliczaj taryfy, sprawdzaj koszt AGD i oszczędzaj na rachunkach za prąd.</p>
+  </header>
+
+  <!-- Pasek zakładek -->
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('tab-taryfy', this)">1. Kalkulator Taryf</button>
+    <button class="tab-btn" onclick="switchTab('tab-agd', this)">2. Koszt Urządzeń AGD</button>
+    <button class="tab-btn" onclick="switchTab('tab-wiedza', this)">3. Baza Wiedzy (SEO)</button>
+  </div>
+
+  <div class="container">
+    
+    <div class="main-content">
+      
+      <!-- ZAKŁADKA 1: KALKULATOR TARYF -->
+      <div id="tab-taryfy" class="tab-content active">
+        <div class="card">
+          <h2>1. Porównywarka Taryf Prądu (G11 vs G12w vs Dynamiczna)</h2>
+          
+          <div class="form-group">
+            <label>Miesięczny rachunek za prąd (zł):</label>
+            <input type="number" id="billAmount" value="350">
+          </div>
+
+          <div class="form-group">
+            <label>Dodatkowy sprzęt w domu:</label>
+            <select id="equipment">
+              <option value="standard">Standardowe zużycie</option>
+              <option value="heatpump">Pompa Ciepła</option>
+              <option value="ev">Auto Elektryczne (Ładowane w nocy)</option>
+              <option value="both">Pompa Ciepła + Auto Elektryczne</option>
+            </select>
+          </div>
+
+          <button class="btn-calc" onclick="calculateTariffs()">Przelicz Oszczędności</button>
+
+          <div id="tariffResults" class="results-box" style="display:none;">
+            <p id="tariffRecommendation"></p>
+            <div class="savings-highlight" id="tariffSavings">0 zł / rok</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Roczny Koszt Prądu w Różnych Taryfach</h2>
+          <canvas id="tariffChart" height="140"></canvas>
+        </div>
+      </div>
+
+      <!-- ZAKŁADKA 2: KALKULATOR AGD -->
+      <div id="tab-agd" class="tab-content">
+        <div class="card">
+          <h2>2. Ile kosztuje używanie poszczególnych sprzętów?</h2>
+          <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 16px;">
+            Wpisz ile godzin/cykli dziennie używasz danego sprzętu, aby poznać miesięczny koszt (przyjęto 1,15 zł / kWh).
+          </p>
+
+          <div class="devices-grid">
+            <div class="device-item">
+              <h4>Czajnik Elektryczny (2000W)</h4>
+              <label>Minut dziennie:</label>
+              <input type="number" id="dev_czajnik" value="15">
+            </div>
+            <div class="device-item">
+              <h4>Płyta Indukcyjna (3000W)</h4>
+              <label>Godzin dziennie:</label>
+              <input type="number" id="dev_płyta" value="1">
+            </div>
+            <div class="device-item">
+              <h4>Lodówka (Praca ciągła)</h4>
+              <label>Średnia dobowa (kWh):</label>
+              <input type="number" id="dev_lodowka" value="0.8" step="0.1">
+            </div>
+            <div class="device-item">
+              <h4>Telewizor 55" (120W)</h4>
+              <label>Godzin dziennie:</label>
+              <input type="number" id="dev_tv" value="5">
+            </div>
+            <div class="device-item">
+              <h4>Pralka (Cykl prania)</h4>
+              <label>Liczba prań w tygodniu:</label>
+              <input type="number" id="dev_pralka" value="4">
+            </div>
+          </div>
+
+          <button class="btn-calc" onclick="calculateAGD()">Oblicz Koszt AGD</button>
+
+          <div id="agdResults" class="results-box" style="display:none;">
+            <h3>Miesięczny koszt prądu dla wybranych urządzeń:</h3>
+            <div class="savings-highlight" id="agdTotalCost">0 zł / miesiąc</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ZAKŁADKA 3: BAZA WIEDZY (SEO) -->
+      <div id="tab-wiedza" class="tab-content">
+        <div class="card">
+          <h2>3. Poradnik Energetyczny i Taryfy</h2>
+          
+          <div class="faq-item">
+            <h3>Czym jest taryfa dynamiczna prądu?</h3>
+            <p>Taryfa dynamiczna polega na tym, że cena energii zmienia się co godzinę na podstawie notowań na giełdzie prądu. Gdy wieje wiatr i świeci słońce, prąd bywa bardzo tani (a czasem nawet ma ujemne ceny). W godzinach szczytu (np. 18:00 - 21:00) jest najdroższy.</p>
+          </div>
+
+          <div class="faq-item">
+            <h3>Dla kogo opłaca się taryfa G12w?</h3>
+            <p>Taryfa G12w (weekendowa) jest idealna dla osób, które pracują poza domem w tygodniu, a pranie, sprzątanie, gotowanie czy ładowanie samochodu wykonują głównie wieczorami lub w soboty i niedziele.</p>
+          </div>
+
+          <div class="faq-item">
+            <h3>Jak zmniejszyć zużycie prądu przez czajnik i płytę?</h3>
+            <p>Gotuj w czajniku tylko tyle wody, ile w danej chwili potrzebujesz. Zawsze używaj przykrywek na garnki podczas gotowania na płycie indukcyjnej – skraca to czas gotowania o ponad 30%.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- PASEK BOCZNY (REKLAMY I AFILIACJA) -->
+    <div class="sidebar">
+      
+      <!-- STAN CEN NA ŻYWO / ZIELONA ENERGIA -->
+      <div class="card" style="padding: 16px; text-align: center;">
+        <h4 style="font-size: 0.85rem; color: #64748b;">📊 Średnia Cena Giełdowa (RCE)</h4>
+        <div style="font-size: 1.3rem; font-weight: bold; color: #0284c7; margin: 6px 0;" id="livePrice">0,48 zł / kWh</div>
+        <button onclick="updateLivePrice()" style="font-size:0.75rem; background:#cbd5e1; color:#1e293b; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Odśwież stawki API</button>
+      </div>
+
+      <!-- MIEJSCE NA GOOGLE ADSENSE -->
+      <div class="ad-placeholder">
+        <b>[ Reklama Google AdSense ]</b>
+        <span style="font-size: 0.75rem; margin-top:6px;">Automatyczne banery dostawców prądu i fotowoltaiki</span>
+      </div>
+
+      <!-- LINK AFILIACYJNY -->
+      <div class="affiliate-box">
+        <h3>💡 Szukasz Najtańszego Prądu?</h3>
+        <p>Porównaj aktualne oferty dostawców w swoim mieście i podpisz umowę przez internet.</p>
+        <a href="https://example.com" target="_blank" rel="nofollow" class="affiliate-btn">Sprawdź Oferty online →</a>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    let tariffChartInstance = null;
+
+    // Przełączanie zakładek
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      
+      document.getElementById(tabId).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    // Obliczanie Taryf
+    function calculateTariffs() {
+      const bill = parseFloat(document.getElementById("billAmount").value) || 0;
+      const equipment = document.getElementById("equipment").value;
+
+      const yearlyG11 = bill * 12;
+      let factorG12 = 0.12;
+      let factorDyn = 0.18;
+
+      if (equipment === "ev") { factorG12 = 0.25; factorDyn = 0.35; }
+      else if (equipment === "heatpump") { factorG12 = 0.20; factorDyn = 0.22; }
+      else if (equipment === "both") { factorG12 = 0.30; factorDyn = 0.40; }
+
+      const yearlyG12 = yearlyG11 * (1 - factorG12);
+      const yearlyDyn = yearlyG11 * (1 - factorDyn);
+      const maxSavings = Math.round(yearlyG11 - Math.min(yearlyG12, yearlyDyn));
+
+      document.getElementById("tariffResults").style.display = "block";
+      document.getElementById("tariffRecommendation").innerText = "Przejście na tańszą taryfę dopasowaną do Twojego sprzętu pozwoli zaoszczędzić około:";
+      document.getElementById("tariffSavings").innerText = `~ ${maxSavings} zł rocznie`;
+
+      updateChart(Math.round(yearlyG11), Math.round(yearlyG12), Math.round(yearlyDyn));
+    }
+
+    function updateChart(g11, g12, dyn) {
+      const ctx = document.getElementById('tariffChart').getContext('2d');
+      if (tariffChartInstance) tariffChartInstance.destroy();
+
+      tariffChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['G11 (Stała)', 'G12w (Noc/Weekend)', 'Dynamiczna'],
+          datasets: [{
+            label: 'Rocznie (zł)',
+            data: [g11, g12, dyn],
+            backgroundColor: ['#ef4444', '#f59e0b', '#10b981'],
+            borderRadius: 6
+          }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
+    }
+
+    // Obliczanie AGD
+    function calculateAGD() {
+      const czajnik = (parseFloat(document.getElementById("dev_czajnik").value) || 0) / 60 * 2 * 30 * 1.15;
+      const płyta = (parseFloat(document.getElementById("dev_płyta").value) || 0) * 3 * 30 * 1.15;
+      const lodówka = (parseFloat(document.getElementById("dev_lodowka").value) || 0) * 30 * 1.15;
+      const tv = (parseFloat(document.getElementById("dev_tv").value) || 0) * 0.12 * 30 * 1.15;
+      const pralka = (parseFloat(document.getElementById("dev_pralka").value) || 0) * 4 * 1 * 1.15;
+
+      const total = Math.round(czajnik + płyta + lodówka + tv + pralka);
+
+      document.getElementById("agdResults").style.display = "block";
+      document.getElementById("agdTotalCost").innerText = `ok. ${total} zł / miesiąc`;
+    }
+
+    // Symulacja pobierania stawek API na żywo
+    function updateLivePrice() {
+      const randomPrice = (0.35 + Math.random() * 0.25).toFixed(2);
+      document.getElementById("livePrice").innerText = `${randomPrice.replace('.', ',')} zł / kWh`;
+    }
+
+    // Start
+    calculateTariffs();
+  </script>
+</body>
+</html>
